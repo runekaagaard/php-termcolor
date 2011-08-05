@@ -5,6 +5,7 @@ the phpdoc for documentation.
 ## Examples ##
 
 ```php
+<?php
 echo 'Test basic colors:' . "\n";
 tcechon('Grey color', 'grey');
 tcechon('Red color', 'red');
