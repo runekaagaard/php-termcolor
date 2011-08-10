@@ -1,7 +1,7 @@
 <?php
 
 /**
- * A direct port of http://pypi.python.org/pypi/termcolor to PHP.
+ * An (almost) direct port of http://pypi.python.org/pypi/termcolor to PHP.
  * 
  * @author Rune Kaagaard <rumi.kg@gmail.com>
  * @license None.
@@ -25,97 +25,107 @@ $TC_COLORS = array_combine(
     range(30, 37)
 );
 
+$TC_ALL = array_merge($TC_ATTRIBUTES, $TC_HIGHLIGHTS, $TC_COLORS);
+
 $TC_RESET = "\033[0m";
 
 /**
- * Returns text formatted with color, backgroundcolor and/or attributes.
+ * Returns text formatted with color, background color and/or attributes.
  * 
- * @global type $TC_ATTRIBUTES
- * @global type $TC_COLORS
- * @global type $TC_HIGHLIGHTS
+ * @global array $TC_ALL
  * @global string $TC_RESET
- * @param type $text
- * @param type $color
- *     Available text colors:
- *        red, green, yellow, blue, magenta, cyan, white.
- * @param type $on_color
- *     Available text highlights:
- *         on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, on_white.
- * @param type $attrs
- *     Available attributes:
- *         bold, dark, underline, blink, reverse, concealed.
+ * @param string $text
+ *    The text to apply color to ($arg1).
+ * @param string/array $arg2 ... $argN
+ *     Any of the following text colors, background colors or style attributes
+ *     in arbitrary order.
+ *         Available text colors:
+ *             red, green, yellow, blue, magenta, cyan, white.
+ *         Available text highlights:
+ *             on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, 
+               on_white.
+ *         Available attributes:
+ *             bold, dark, underline, blink, reverse, concealed.
  * @example
- *     colored('Hello, World!', 'red', 'on_grey', array('blue', 'blink'));
- *     colored('Hello, World!', 'green');
+ *     tc_colored('Hello, World!', 'red', 'on_grey', 'blue', 'blink');
+ *     tc_colored('Hello, World!', 'green');
  * @return string 
  */
-function tc_colored($text, $color=null, $on_color=null, $attrs=null) {
-    global $TC_ATTRIBUTES, $TC_COLORS, $TC_HIGHLIGHTS, $TC_RESET;
-    $fmt_str = "\033[%dm%s";
-    if ($color)
-        $text = sprintf($fmt_str, $TC_COLORS[$color], $text);
-
-    if ($on_color)
-        $text = sprintf($fmt_str, $TC_HIGHLIGHTS[$on_color], $text);
-
-    if ($attrs)
-        foreach ($attrs as $attr)
-            $text = sprintf($fmt_str, $TC_ATTRIBUTES[$attr], $text);
-
-    $text .= $TC_RESET;
-    return $text;
+function tc_colored() {
+    global $TC_ALL, $TC_RESET;
+    static $fmt_str = "\033[%dm%s";
+    
+    $args = func_get_args();
+    $text = array_shift($args);
+    
+    foreach ($args as $_arg) {
+        foreach ((array)$_arg as $arg) {
+            if (isset($TC_ALL[$arg])) {
+                $text = sprintf($fmt_str, $TC_ALL[$arg], $text);
+            } else {
+                tcechon("Invalid argument to termcolor.php: $arg.");
+                exit(1);
+            }
+        }
+    }
+    
+    return $text . $TC_RESET;
 }
 
 /**
- * Echos text formatted with color, backgroundcolor and/or attributes. Adds
+ * Echos text formatted with color, background color and/or attributes. Adds
  * a new line at the end.
  * 
- * @param type $text
- * @param type $color
- *     Available text colors:
- *        red, green, yellow, blue, magenta, cyan, white.
- * @param type $on_color
- *     Available text highlights:
- *         on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, on_white.
- * @param type $attrs
- *     Available attributes:
- *         bold, dark, underline, blink, reverse, concealed.
+ * @param string $text
+ *    The text to apply color to ($arg1).
+ * @param string/array $arg2 ... $argN
+ *     Any of the following text colors, background colors or style attributes
+ *     in arbitrary order.
+ *         Available text colors:
+ *             red, green, yellow, blue, magenta, cyan, white.
+ *         Available text highlights:
+ *             on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, 
+               on_white.
+ *         Available attributes:
+ *             bold, dark, underline, blink, reverse, concealed.
  * @example
- *     colored('Hello, World!', 'red', 'on_grey', array('blue', 'blink'));
- *     colored('Hello, World!', 'green');
- * @return string 
+ *     tcechon('Hello, World!', 'red', 'on_grey', 'blue', 'blink');
+ *     tcechon('Hello, World!', 'green');
  */
-function tcechon($text, $color=null, $on_color=null, $attrs=null) {
-    echo tc_colored($text, $color, $on_color, $attrs) . "\n";
+function tcechon() {
+    $args = func_get_args();
+    echo call_user_func_array('tc_colored', $args). "\n";
 }
 
 /**
- * Echos text formatted with color, backgroundcolor and/or attributes.
+ * Echos text formatted with color, background color and/or attributes.
  * 
- * @param type $text
- * @param type $color
- *     Available text colors:
- *        red, green, yellow, blue, magenta, cyan, white.
- * @param type $on_color
- *     Available text highlights:
- *         on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, on_white.
- * @param type $attrs
- *     Available attributes:
- *         bold, dark, underline, blink, reverse, concealed.
+ * @param string $text
+ *    The text to apply color to ($arg1).
+ * @param string/array $arg2 ... $argN
+ *     Any of the following text colors, background colors or style attributes
+ *     in arbitrary order.
+ *         Available text colors:
+ *             red, green, yellow, blue, magenta, cyan, white.
+ *         Available text highlights:
+ *             on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, 
+               on_white.
+ *         Available attributes:
+ *             bold, dark, underline, blink, reverse, concealed.
  * @example
- *     colored('Hello, World!', 'red', 'on_grey', array('blue', 'blink'));
- *     colored('Hello, World!', 'green');
- * @return string 
+ *     tcecho('Hello, World!', 'red', 'on_grey', 'blue', 'blink');
+ *     tcecho('Hello, World!', 'green');
  */
-function tcecho($text, $color=null, $on_color=null, $attrs=null) {
-    echo tc_colored($text, $color, $on_color, $attrs) . "\n";
+function tcecho() {
+    $args = func_get_args();
+    echo call_user_func_array('tc_colored', $args);
 }
 
 if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
     echo 'Test basic colors:' . "\n";
     tcechon('Grey color', 'grey');
-    tcechon('Red color', 'red');
-    tcechon('Green color', 'green');
+    tcecho('Red color', 'red'); echo "\n";
+    echo tc_colored('Green color', 'green') . "\n";
     tcechon('Yellow color', 'yellow');
     tcechon('Blue color', 'blue');
     tcechon('Magenta color', 'magenta');
@@ -124,30 +134,30 @@ if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
     echo str_repeat('-', 78) . "\n";
 
     echo 'Test highlights:' . "\n";
-    tcechon('On grey color', null, 'on_grey');
-    tcechon('On red color', null, 'on_red');
-    tcechon('On green color', null, 'on_green');
-    tcechon('On yellow color', null, 'on_yellow');
-    tcechon('On blue color', null, 'on_blue');
-    tcechon('On magenta color', null, 'on_magenta');
-    tcechon('On cyan color', null, 'on_cyan');
+    tcechon('On grey color', 'on_grey');
+    tcechon('On red color', 'on_red');
+    tcechon('On green color', 'on_green');
+    tcechon('On yellow color', 'on_yellow');
+    tcechon('On blue color', 'on_blue');
+    tcechon('On magenta color', 'on_magenta');
+    tcechon('On cyan color', 'on_cyan');
     tcechon('On white color', 'grey', 'on_white');
     echo str_repeat('-', 78) . "\n";
 
     echo 'Test attributes:' . "\n";
-    tcechon('Bold grey color', 'grey', null, array('bold'));
-    tcechon('Dark red color', 'red', null, array('dark'));
-    tcechon('Underline green color', 'green', null, array('underline'));
-    tcechon('Blink yellow color', 'yellow', null, array('blink'));
-    tcechon('Reversed blue color', 'blue', null, array('reverse'));
-    tcechon('Concealed Magenta color', 'magenta', null, array('concealed'));
-    tcechon('Bold underline reverse cyan color', 'cyan', null, array(
-            'bold', 'underline', 'reverse'));
-    tcechon('Dark blink concealed white color', 'white', null, array(
-            'dark', 'blink', 'concealed'));
+    tcechon('Bold grey color', 'grey', 'bold');
+    tcechon('Dark red color', 'red', 'dark');
+    tcechon('Underline green color', 'green', 'underline');
+    tcechon('Blink yellow color', 'yellow', 'blink');
+    tcechon('Reversed blue color', 'blue', 'reverse');
+    tcechon('Concealed Magenta color', 'magenta', 'concealed');
+    tcechon('Bold underline reverse cyan color', 'cyan', 'bold', 'underline', 
+            'reverse');
+    tcechon('Dark blink concealed white color', 'white', array('dark', 'blink', 
+            'concealed'));
     echo str_repeat('-', 78) . "\n";
 
     echo 'Test mixing:' . "\n";
-    tcechon('Underline red on grey color', 'red', 'on_grey', array('underline'));
-    tcechon('Reversed green on red color', 'green', 'on_red', array('reverse'));
+    tcechon('Underline red on grey color', 'red', 'on_grey', 'underline');
+    tcechon('Reversed green on red color', 'green', 'on_red', 'reverse');
 }
