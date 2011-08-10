@@ -6,28 +6,6 @@
  * @author Rune Kaagaard <rumi.kg@gmail.com>
  * @license None.
  */
-$TC_ATTRIBUTES = array_combine(
-    array('bold', 'dark', '', 'underline', 'blink', '', 'reverse', 'concealed'),
-    range(1, 8)
-            
-);
-unset($TC_ATTRIBUTES['']);
-
-$TC_HIGHLIGHTS = array_combine(
-    array('on_grey', 'on_red', 'on_green', 'on_yellow', 'on_blue', 'on_magenta',
-          'on_cyan', 'on_white'),
-    range(40, 47)
-            
-);
-
-$TC_COLORS = array_combine(
-    array('grey', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'),
-    range(30, 37)
-);
-
-$TC_ALL = array_merge($TC_ATTRIBUTES, $TC_HIGHLIGHTS, $TC_COLORS);
-
-$TC_RESET = "\033[0m";
 
 /**
  * Returns text formatted with color, background color and/or attributes.
@@ -52,16 +30,20 @@ $TC_RESET = "\033[0m";
  * @return string 
  */
 function tc_colored() {
-    global $TC_ALL, $TC_RESET;
     static $fmt_str = "\033[%dm%s";
+    static $reset = "\033[0m";
+    static $options = false; 
+    if (!$options) { 
+        $options = _tc_get_options();
+    }
     
     $args = func_get_args();
     $text = array_shift($args);
     
     foreach ($args as $_arg) {
         foreach ((array)$_arg as $arg) {
-            if (isset($TC_ALL[$arg])) {
-                $text = sprintf($fmt_str, $TC_ALL[$arg], $text);
+            if (isset($options[$arg])) {
+                $text = sprintf($fmt_str, $options[$arg], $text);
             } else {
                 tcechon("Invalid argument to termcolor.php: $arg.");
                 exit(1);
@@ -69,7 +51,7 @@ function tc_colored() {
         }
     }
     
-    return $text . $TC_RESET;
+    return $text . $reset;
 }
 
 /**
@@ -119,6 +101,38 @@ function tcechon() {
 function tcecho() {
     $args = func_get_args();
     echo call_user_func_array('tc_colored', $args);
+}
+
+/**
+ * Helper function that builds an array of all the available text colors,
+ * background colors and text attributes and their corresponding terminal codes.
+ *
+ * @return array
+ */
+function _tc_get_options() {
+    $options = array_merge(
+        // Foreground colors.
+        array_combine(
+            array('grey', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 
+                  'white'),
+            range(30, 37)
+        ),
+        // Background colors.
+        array_combine(
+            array('on_grey', 'on_red', 'on_green', 'on_yellow', 'on_blue', 
+                  'on_magenta', 'on_cyan', 'on_white'),
+            range(40, 47)
+                
+        ),
+        // Text style attributes. 3 and 6 is not used.
+        array_combine(
+            array('bold', 'dark', '', 'underline', 'blink', '', 'reverse', 
+                  'concealed'),
+            range(1, 8)
+        )
+    );
+    unset($options['']);
+    return $options;
 }
 
 if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
